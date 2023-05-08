@@ -14,7 +14,7 @@
 static FILE*       fp = NULL;
 static char*       err_msg = NULL;
 static char        err_buffer[PCAP_ERRBUF_SIZE];
-static int*        client_socket;
+static int         client_socket;
 static pcap_t*     handle = NULL;
 static rb_node_t**  root = NULL;
 
@@ -133,7 +133,7 @@ select_iface(const char* iface_name) {
     if (pcap_findalldevs(&interfaces, err_buffer) == -1) {
         snprintf(buffer, BUFFER_SIZE, "Error finding available interfaces: %s\n", err_buffer);
         logging(buffer);
-        send_data_to_socket(client_socket, buffer, strlen(buffer), fp);
+        send_data_to_socket(&client_socket, buffer, strlen(buffer), fp);
         return;
     }
 
@@ -143,7 +143,7 @@ select_iface(const char* iface_name) {
             if (handle == NULL) {
                 snprintf(buffer, BUFFER_SIZE, "Error opening interface %s: %s\n", iface->name, err_buffer);
                 logging(buffer);
-                send_data_to_socket(client_socket, buffer, strlen(buffer), fp);
+                send_data_to_socket(&client_socket, buffer, strlen(buffer), fp);
             } else {
                 iface_found = 1;
                 break;
@@ -156,7 +156,7 @@ select_iface(const char* iface_name) {
     if (!iface_found) {
         snprintf(buffer, BUFFER_SIZE, "Error: interface %s not found\n", iface_name);
         logging(buffer);
-        send_data_to_socket(client_socket, buffer, strlen(buffer), fp);
+        send_data_to_socket(&client_socket, buffer, strlen(buffer), fp);
     }
 }
 
@@ -176,7 +176,7 @@ print_ip_packet_count(const char* ip_str) {
     char buffer[BUFFER_SIZE];
     count = node->count;
     snprintf(buffer, BUFFER_SIZE, "IP address %s has %d packets\n", inet_ntoa(node->ip), count);
-    send_data_to_socket(client_socket, buffer, strlen(buffer), fp);
+    send_data_to_socket(&client_socket, buffer, strlen(buffer), fp);
     logging(buffer);
 }
 
@@ -191,15 +191,20 @@ help() {
                      " - help - show this help message\n"
                      " - exit - exit the program\n";
 
-    send_data_to_socket(client_socket, commands, strlen(commands), fp);
+    send_data_to_socket(&client_socket, commands, strlen(commands), fp);
 }
 
 void
 set_connection_options(int* server_socket, char* socket_path) {
     create_socket(server_socket, AF_UNIX, fp);
+
+    int option_value = 1;
+    set_socket_option(server_socket, SOL_SOCKET, SO_REUSEADDR, (const void *) option_value, sizeof(int), fp);
+
     struct sockaddr_un server_addr = {0};
     make_address(&server_addr, AF_UNIX, socket_path);
     bind_socket(server_socket, &server_addr, fp);
+
     listen_socket(server_socket, SOMAXCONN, fp);
 }
 
@@ -224,18 +229,19 @@ command_dispatcher(int* t_socket, char* buffer) {
 
 void
 run(char* socket_path) {
-    int* server_socket;
+    int server_socket;
+    struct sockaddr_un server_address;
+    socklen_t socket_length = sizeof(server_address);
     char buffer[BUFFER_SIZE];
     ssize_t bytes_recv = 0;
+    printf("Macros works, i am in daemon.c run\n");
+    set_connection_options(&server_socket, socket_path);
 
-    set_connection_options(server_socket, socket_path);
 
-
-
-//    while (1) {
-//        accept_sockets(client_socket, server_socket, NULL, NULL, fp);
+    while (1) {
+        accept_sockets(&client_socket, &server_socket, &server_address, &socket_length, fp);
 //        memset(buffer, 0, BUFFER_SIZE);
 //        read_data_from_socket(client_socket, buffer, BUFFER_SIZE, fp);
 //        command_dispatcher(client_socket, buffer);
-//    }
+    }
 }
