@@ -139,13 +139,17 @@ insert(rb_node_t** root, rb_node_t* node) {
     insert_fixup(root, node);
 }
 
-void
-inorder(rb_node_t* root) {
-    if (root == NULL) {
-        return;
+rb_node_t*
+find_node(rb_node_t* root, struct in_addr ip) {
+    rb_node_t* current = root;
+    while (current != NULL) {
+        if (ip.s_addr < current->ip.s_addr) {
+            current = current->left;
+        } else if (ip.s_addr > current->ip.s_addr) {
+            current = current->right;
+        } else {
+            return current;
+        }
     }
-
-    inorder(root->left);
-    printf("IP: %s, Count: %u\n", inet_ntoa(root->ip), root->count);
-    inorder(root->right);
+    return NULL;
 }

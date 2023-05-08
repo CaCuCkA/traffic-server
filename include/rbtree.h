@@ -22,6 +22,5 @@ void        rotate_left(rb_node_t** root, rb_node_t *node);
 void        rotate_right(rb_node_t** root, rb_node_t *node);
 void        insert_fixup(rb_node_t** root, rb_node_t *node);
 void        insert(rb_node_t** root, rb_node_t* node);
-void        inorder(rb_node_t* root);
-
+rb_node_t*  find_node(rb_node_t* root, struct in_addr ip);
 #endif //TRAFFIC_SERVER_RBTREE_H
