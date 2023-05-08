@@ -21,7 +21,7 @@ create_socket(int *t_socket, int domain, FILE* fp) {
 
 void
 bind_socket(const int *t_socket, struct sockaddr_un *t_address, FILE* fp) {
-    int error = bind(*t_socket, (const struct sockaddr *) t_address, sizeof(*t_address));
+    int error = bind(*t_socket, (const struct sockaddr *) t_address, sizeof(struct sockaddr_un));
     if (error == EC_CANT_BIND_SOCKET) {
         raise_error(fp, t_socket, "Failed to bind socket\n");
     }
@@ -64,9 +64,30 @@ send_data_to_socket(const int *t_socket, char *buffer, ssize_t bytes_recv, FILE*
 }
 
 void
-make_address(struct sockaddr_un *server_address, int family, char *socket_path) {
-    memset(server_address, 0, sizeof(struct sockaddr_un));
+connect_socket(int* t_socket, struct sockaddr_un* socket_address, FILE* fp) {
+    int error = connect(*t_socket, (const struct sockaddr *) socket_address, sizeof(*socket_address));
+    if (error == EC_CANT_CONNECT_SOCKET) {
+        raise_error(fp, t_socket, "Failed to connect socket\n");
+    }
+}
+
+void
+set_socket_option(int* t_socket, int level, int socket_option, const void* buffer, size_t buffer_size, FILE* fp) {
+    int error = setsockopt(*t_socket, level, socket_option, &buffer, buffer_size);
+    if (error == EC_CANT_SET_SOCKET_OPTION) {
+        raise_error(fp, t_socket, "Failed to set socket option\n");
+    }
+}
+
+void
+make_address(struct sockaddr_un* server_address, int family, const char* socket_path) {
+    memset(server_address, 0, sizeof(*server_address));
     server_address->sun_family = family;
     strncpy(server_address->sun_path, socket_path, sizeof(server_address->sun_path) - 1);
+#ifdef DAEMON
+    printf("All works!\n");
+    server_address->sun_path[sizeof(server_address->sun_path) - 1] = '\0';
     unlink(socket_path);
+#endif
 }
+
