@@ -4,28 +4,40 @@ LDFLAGS = -lpcap
 OBJ_DIR = obj
 SRC_DIR = src
 INC_DIR = include
+DEFINES = -DDAEMON
 
-all: daemon
+all: daemon client
 
-daemon: $(OBJ_DIR)/daemon.o $(OBJ_DIR)/server.o $(OBJ_DIR)/rbtree.o $(OBJ_DIR)/main.o
+client: $(OBJ_DIR)/client.o $(OBJ_DIR)/client_server.o $(OBJ_DIR)/client_main.o
+	$(CC) $^ -o $@ $(LDFLAGS)
+
+daemon: $(OBJ_DIR)/daemon.o $(OBJ_DIR)/daemon_server.o $(OBJ_DIR)/rbtree.o $(OBJ_DIR)/daemon_main.o
 	$(CC) $^ -o $@ $(LDFLAGS)
 
 $(OBJ_DIR)/daemon.o: $(INC_DIR)/daemon.h $(SRC_DIR)/daemon.c $(INC_DIR)/server.h $(INC_DIR)/exception.h $(INC_DIR)/rbtree.h | $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $(SRC_DIR)/daemon.c -o $@
+	$(CC) $(CFLAGS) $(DEFINES) -c $(SRC_DIR)/daemon.c -o $@
 
-$(OBJ_DIR)/server.o: $(INC_DIR)/server.h $(SRC_DIR)/server.c | $(OBJ_DIR)
+$(OBJ_DIR)/client.o: $(INC_DIR)/client.h $(SRC_DIR)/client.c $(INC_DIR)/server.h | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $(SRC_DIR)/client.c -o $@
+
+$(OBJ_DIR)/daemon_server.o: $(INC_DIR)/server.h $(SRC_DIR)/server.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) $(DEFINES) -c $(SRC_DIR)/server.c -o $@
+
+$(OBJ_DIR)/client_server.o: $(INC_DIR)/server.h $(SRC_DIR)/server.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $(SRC_DIR)/server.c -o $@
 
 $(OBJ_DIR)/rbtree.o: $(INC_DIR)/rbtree.h $(SRC_DIR)/rbtree.c | $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $(SRC_DIR)/rbtree.c -o $@
+	$(CC) $(CFLAGS) $(DEFINES) -c $(SRC_DIR)/rbtree.c -o $@
 
-$(OBJ_DIR)/main.o: $(SRC_DIR)/main.c $(INC_DIR)/server.h $(INC_DIR)/daemon.h $(INC_DIR)/exception.h $(INC_DIR)/rbtree.h | $(OBJ_DIR)
+$(OBJ_DIR)/daemon_main.o: $(SRC_DIR)/main.c $(INC_DIR)/daemon.h | $(OBJ_DIR)
+	$(CC) $(CFLAGS) $(DEFINES) -c $(SRC_DIR)/main.c -o $@
+
+$(OBJ_DIR)/client_main.o: $(SRC_DIR)/main.c $(INC_DIR)/client.h | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $(SRC_DIR)/main.c -o $@
-
 $(OBJ_DIR):
 	mkdir -p $(OBJ_DIR)
 
 clean:
-	rm -rf $(OBJ_DIR) daemon
+	rm -rf $(OBJ_DIR) daemon client
 
 .PHONY: all clean
