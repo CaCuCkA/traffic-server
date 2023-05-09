@@ -17,10 +17,11 @@ rb_node {
     struct rb_node *parent;
 } rb_node_t;
 
-rb_node_t*  create_node(struct in_addr ip, uint32_t count);
+rb_node_t*  create_node(struct in_addr ip);
 void        rotate_left(rb_node_t** root, rb_node_t *node);
 void        rotate_right(rb_node_t** root, rb_node_t *node);
 void        insert_fixup(rb_node_t** root, rb_node_t *node);
 void        insert(rb_node_t** root, rb_node_t* node);
+void        free_tree(rb_node_t* node);
 rb_node_t*  find_node(rb_node_t* root, struct in_addr ip);
 #endif //TRAFFIC_SERVER_RBTREE_H

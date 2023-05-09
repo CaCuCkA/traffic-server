@@ -1,6 +1,6 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "rbtree.h"
 
@@ -18,10 +18,10 @@ get_uncle(rb_node_t* node) {
 }
 
 rb_node_t*
-create_node(struct in_addr ip, uint32_t count) {
+create_node(struct in_addr ip) {
     rb_node_t* new_node = (rb_node_t*) malloc(sizeof(rb_node_t));
     new_node->ip = ip;
-    new_node->count = count;
+    new_node->count = 1;
     new_node->color = RED;
     new_node->left = NULL;
     new_node->right = NULL;
@@ -152,4 +152,16 @@ find_node(rb_node_t* root, struct in_addr ip) {
         }
     }
     return NULL;
+}
+
+void
+free_tree(rb_node_t* node) {
+    if (node == NULL) {
+        return;
+    }
+
+    free_tree(node->left);
+    free_tree(node->right);
+
+    free(node);
 }
