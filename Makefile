@@ -8,10 +8,10 @@ DEFINES = -DDAEMON
 
 all: daemon client
 
-client: $(OBJ_DIR)/client.o $(OBJ_DIR)/client_server.o $(OBJ_DIR)/client_main.o
+client: $(OBJ_DIR)/client.o $(OBJ_DIR)/client_server.o $(OBJ_DIR)/client_main.o $(OBJ_DIR)/client_utils.o
 	$(CC) $^ -o $@ $(LDFLAGS)
 
-daemon: $(OBJ_DIR)/daemon.o $(OBJ_DIR)/daemon_server.o $(OBJ_DIR)/rbtree.o $(OBJ_DIR)/daemon_main.o
+daemon: $(OBJ_DIR)/daemon.o $(OBJ_DIR)/daemon_server.o $(OBJ_DIR)/rbtree.o $(OBJ_DIR)/daemon_main.o $(OBJ_DIR)/daemon_utils.o
 	$(CC) $^ -o $@ $(LDFLAGS)
 
 $(OBJ_DIR)/daemon.o: $(INC_DIR)/daemon.h $(SRC_DIR)/daemon.c $(INC_DIR)/server.h $(INC_DIR)/exception.h $(INC_DIR)/rbtree.h | $(OBJ_DIR)
@@ -22,6 +22,12 @@ $(OBJ_DIR)/client.o: $(INC_DIR)/client.h $(SRC_DIR)/client.c $(INC_DIR)/server.h
 
 $(OBJ_DIR)/daemon_server.o: $(INC_DIR)/server.h $(SRC_DIR)/server.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) $(DEFINES) -c $(SRC_DIR)/server.c -o $@
+
+$(OBJ_DIR)/daemon_utils.o: $(INC_DIR)/utils.h $(SRC_DIR)/utils.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) $(DEFINES) -c $(SRC_DIR)/utils.c -o $@
+
+$(OBJ_DIR)/client_utils.o: $(INC_DIR)/utils.h $(SRC_DIR)/utils.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $(SRC_DIR)/utils.c -o $@
 
 $(OBJ_DIR)/client_server.o: $(INC_DIR)/server.h $(SRC_DIR)/server.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $(SRC_DIR)/server.c -o $@
