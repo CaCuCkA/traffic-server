@@ -14,11 +14,11 @@ void        bind_socket(const int *t_socket, struct sockaddr_un* t_address, FILE
 void        listen_socket(const int* t_socket, int t_amount_of_users, FILE* fp);
 void        accept_sockets(int* t_socket, const int* listening_socket, struct sockaddr_un* socket_address,
                            socklen_t*  address_length, FILE* fp);
-void        set_socket_option(int* t_socket, int level, int socket_option, const void* buffer,
+void        set_socket_option(int* t_socket, int level, int socket_option, int buffer,
                               size_t buffer_size, FILE* fp);
 void        connect_socket(int* t_socket, struct sockaddr_un* socket_address, FILE* fp);
 void        make_address(struct sockaddr_un* server_address, int family, const char* socket_path);
-void        send_data_to_socket(const int* t_socket, char* buffer, ssize_t bytes_recv, FILE* fp);
-ssize_t     read_data_from_socket(const int* t_socket, char* buffer, uint16_t bufferLength, FILE* fp);
+void        send_data_to_socket(const int* t_socket, void* data, size_t bytes_recv, FILE* fp);
+ssize_t     read_data_from_socket(const int* t_socket, void* data, uint16_t bufferLength, FILE* fp);
 
 #endif //TRAFFIC_SERVER_SERVER_H
