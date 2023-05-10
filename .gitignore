@@ -489,6 +489,12 @@ MigrationBackup/
 
 # Object files
 .obj/
+client
+daemon
 
 # .idea
 .idea/
+
+# Files with logs and data
+Data.txt
+Logs.txt
