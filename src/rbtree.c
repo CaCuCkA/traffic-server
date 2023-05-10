@@ -17,11 +17,27 @@ get_uncle(rb_node_t* node) {
     }
 }
 
+static void
+save_rbtree_helper(rb_node_t* node, FILE* fp) {
+    if (node == NULL) {
+        return;
+    }
+
+    save_rbtree_helper(node->left, fp);
+
+    fwrite(&node->ip, sizeof(node->ip), 1, fp);
+    fwrite(&node->count, sizeof(node->count), 1, fp);
+    fwrite(&node->color, sizeof(node->color), 1, fp);
+
+    save_rbtree_helper(node->right, fp);
+}
+
+
 rb_node_t*
-create_node(struct in_addr ip) {
+create_node(struct in_addr ip, int count) {
     rb_node_t* new_node = (rb_node_t*) malloc(sizeof(rb_node_t));
     new_node->ip = ip;
-    new_node->count = 1;
+    new_node->count = count;
     new_node->color = RED;
     new_node->left = NULL;
     new_node->right = NULL;
@@ -166,3 +182,49 @@ free_tree(rb_node_t* node) {
 
     free(node);
 }
+
+void
+save_rbtree(rb_node_t *root) {
+    FILE *fp = fopen("Data.txt", "wb");
+    if (fp == NULL) {
+        perror("Error opening file");
+        return;
+    }
+
+    save_rbtree_helper(root, fp);
+
+    fclose(fp);
+}
+
+rb_node_t**
+rebuild_rbtree() {
+    int number = 0;
+    uint8_t color = 0;
+    struct in_addr ip;
+    rb_node_t** root = malloc(sizeof(rb_node_t*));
+
+    FILE* fp = fopen("Data.txt", "rb");
+    if (fp == NULL) {
+        return root;
+    }
+
+    while (1) {
+        size_t count = fread(&ip, sizeof(ip), 1, fp);
+
+        if (count != 1) {
+            break;
+        }
+        fread(&number, sizeof(number), 1, fp);
+        fread(&color, sizeof(color), 1, fp);
+
+        rb_node_t* node = create_node(ip, number);
+
+        fprintf(stdout, "Create new packet from: %s %d, %d\n", inet_ntoa(node->ip), node->count, node->color);
+        insert(root, node);
+    }
+
+    fclose(fp);
+
+    return root;
+}
+
