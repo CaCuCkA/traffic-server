@@ -41,13 +41,14 @@ sigterm_handler() {
     exit(0);
 }
 
-void
-open_file(FILE* fp) {
-    fp = fopen("Logs.txt", "w+");
+FILE*
+open_file() {
+    FILE* fp = fopen("Logs.txt", "w+");
     if (!fp) {
         perror("Failed to open file\n");
         exit(-1);
     }
+    return fp;
 }
 
 void
@@ -73,8 +74,7 @@ set_daemon_mode() {
         logging(stderr, "Failed to set sid");
         exit(EC_CANT_SET_SID);
     }
-
-    chdir("/");
+    chdir(".");
 
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
@@ -84,14 +84,19 @@ set_daemon_mode() {
 }
 
 void
-end_processes(FILE* fp, rb_node_t* root, const int* server_socket, const int* client_socket) {
-    fclose(fp);
-    free_tree(root);
+end_processes(FILE* logs, rb_node_t** root, const int* server_socket, const int* client_socket) {
+    if (root != NULL) {
+        save_rbtree(*root);
+        free_tree(*root);
+    }
     close(*client_socket);
     close(*server_socket);
+    free(root);
+    fclose(logs);
 }
 
-void allocating_memory_for_tree(rb_node_t** root) {
-    root = malloc(sizeof(rb_node_t*));
+rb_node_t**
+create_rbtree() {
+    return malloc(sizeof(rb_node_t*));
 }
 #endif
