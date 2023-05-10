@@ -22,7 +22,7 @@ handle_help_command() {
                      " - select [iface] - select specific iface for sniffing\n"
                      " - help - show this help message\n"
                      " - exit - exit the program\n";
-    fprintf(stdout, "%s", commands);
+    logging(stdout, "%s", commands);
 }
 
 static void
@@ -30,6 +30,8 @@ handle_stat_command(char* command, int* client_socket) {
     char buffer[BUFFER_SIZE];
     send_data_to_socket(client_socket, command, strlen(command), NULL);
     read_data_from_socket(client_socket, buffer, BUFFER_SIZE, NULL);
+
+    logging(stdout, "%s", buffer);
 }
 
 static void
@@ -51,7 +53,6 @@ command_dispatcher(char* command, int* client_socket) {
 
     if (!strcmp(token, "start") || !strcmp(token, "stop")
         || !strcmp(token, "select") || !strcmp(token, "exit")) {
-        fprintf(stdout, "%s\n", command);
         send_data_to_socket(client_socket, command, command_len, NULL);
         if (token[0] == 'e') {
             close(*client_socket);

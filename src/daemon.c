@@ -11,9 +11,10 @@
 #include "server.h"
 #include "rbtree.h"
 
-static FILE*       fp = NULL;
-static int         client_socket;
-static pcap_t*     handle = NULL;
+static int          client_socket;
+static bool         is_sniffing = false;
+static FILE*        fp = NULL;
+static pcap_t*      handle = NULL;
 static rb_node_t**  root;
 
 static void
@@ -22,16 +23,12 @@ packet_handler(u_char* user, const struct pcap_pkthdr* header, const u_char* pac
     struct in_addr src_ip;
     memcpy(&src_ip, &iph->saddr, sizeof(src_ip));
 
-    if (*root == NULL) {
-        *root = create_node(src_ip);
-        return;
-    }
-
     rb_node_t* existing_node = find_node(*root, src_ip);
     if (existing_node != NULL) {
         existing_node->count++;
     } else {
-        rb_node_t* node = create_node(src_ip);
+        logging(fp, "Create new packet from: %s\n", inet_ntoa(src_ip));
+        rb_node_t* node = create_node(src_ip, 1);
         insert(root, node);
     }
 }
@@ -39,7 +36,9 @@ packet_handler(u_char* user, const struct pcap_pkthdr* header, const u_char* pac
 static void*
 sniff_thread_func(void* args) {
     int packets_number = -1;
+    is_sniffing = true;
     pcap_loop(handle, packets_number, packet_handler, NULL);
+    is_sniffing = false;
     return NULL;
 }
 
@@ -71,7 +70,7 @@ start_sniffing() {
 
 static void
 stop_sniffing() {
-    fprintf(fp, "stop sniffing\n");
+    logging(fp, "stop sniffing\n");
     pcap_breakloop(handle);
     pcap_close(handle);
 }
@@ -132,6 +131,26 @@ print_ip_packet_count(const char* ip_str) {
 }
 
 static void
+show_statistic() {
+    char str[BUFFER_SIZE];
+    struct pcap_stat stats;
+
+    if (pcap_stats(handle, &stats) == -1) {
+        logging(fp, "Error getting packet capture statistics\n");
+        return;
+    }
+
+    snprintf(str, 512, "Packet capture statistics:\n"
+                       "  Packets received: %u\n"
+                       "  Packets dropped (by driver): %u\n"
+                       "  Packets dropped (because there was no room in the operating system's buffer): %u\n"
+                       "  Packets dropped (by filter): %u\n",
+         stats.ps_recv, stats.ps_drop, stats.ps_ifdrop, stats.ps_drop);
+
+    send_data_to_socket(&client_socket, str, 512, fp);
+}
+
+static void
 command_dispatcher(char* buffer) {
     char* command = strtok(buffer, " ");
 
@@ -145,7 +164,7 @@ command_dispatcher(char* buffer) {
     } else if (!strcmp(command, "select")) {
         select_iface(strtok(NULL, " "));
     } else if (!strcmp(command, "stat")) {
-//        show_statistic();
+        show_statistic();
     }
 }
 
@@ -157,13 +176,13 @@ run(char* socket_path) {
     char buffer[BUFFER_SIZE];
     ssize_t bytes_recv;
 
-    open_file(fp);
+    fp = open_file();
 
-    set_daemon_mode();
+//    set_daemon_mode();
+
+    root = rebuild_rbtree();
 
     set_connection_options(&server_socket, socket_path, fp);
-
-    allocating_memory_for_tree(root);
 
     accept_sockets(&client_socket, &server_socket, &server_address, &socket_length, fp);
 
@@ -180,5 +199,10 @@ run(char* socket_path) {
         memset(buffer, 0, bytes_recv);
     }
 
-    end_processes(fp, *root, &server_socket, &client_socket);
+    if (is_sniffing) {
+        logging(fp, "Works!\n");
+        stop_sniffing();
+    }
+
+    end_processes(fp, root, &server_socket, &client_socket);
 }
