@@ -10,7 +10,6 @@ void        set_connection_options(int* t_socket, char* socket_path, FILE* out_s
 
 #ifdef DAEMON
 FILE*       open_file();
-rb_node_t** create_rbtree();
 void        set_daemon_mode();
 void        end_processes(FILE* fp, rb_node_t** root, const int* server_socket, const int* client_socket);
 #endif

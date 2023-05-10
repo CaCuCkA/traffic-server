@@ -95,8 +95,4 @@ end_processes(FILE* logs, rb_node_t** root, const int* server_socket, const int*
     fclose(logs);
 }
 
-rb_node_t**
-create_rbtree() {
-    return malloc(sizeof(rb_node_t*));
-}
 #endif

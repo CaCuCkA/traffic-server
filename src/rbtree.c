@@ -219,7 +219,6 @@ rebuild_rbtree() {
 
         rb_node_t* node = create_node(ip, number);
 
-        fprintf(stdout, "Create new packet from: %s %d, %d\n", inet_ntoa(node->ip), node->count, node->color);
         insert(root, node);
     }
 

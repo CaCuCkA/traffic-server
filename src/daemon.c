@@ -121,12 +121,10 @@ print_ip_packet_count(const char* ip_str) {
     }
 
     rb_node_t* node = find_node(*root, ip);
-    if (node == NULL) {
-        fprintf(fp, "IP address not found in RB tree\n");
-        return;
+    if (node != NULL) {
+        count = node->count;
     }
 
-    count = node->count;
     send_data_to_socket(&client_socket, &count, sizeof(int), fp);
 }
 
@@ -178,7 +176,7 @@ run(char* socket_path) {
 
     fp = open_file();
 
-//    set_daemon_mode();
+    set_daemon_mode();
 
     root = rebuild_rbtree();
 
