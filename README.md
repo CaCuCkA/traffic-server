@@ -68,9 +68,14 @@ $ cd traffic-server
 
 In order to start the programme, first the sniffer and then the client programme must be started:
 ```bash
-$ ./daemon
-$ ./client
+$ sudo ./daemon
+$ sudo ./client
 ```
+
+> **Note**
+>
+> You should run you program with superuser roots to allow sniffer your packets
+>
 
 ## Important
 
