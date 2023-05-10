@@ -70,9 +70,10 @@ start_sniffing() {
 
 static void
 stop_sniffing() {
-    logging(fp, "stop sniffing\n");
-    pcap_breakloop(handle);
-    pcap_close(handle);
+    if (is_sniffing) {
+        pcap_breakloop(handle);
+        pcap_close(handle);
+    }
 }
 
 static void
@@ -133,19 +134,18 @@ show_statistic() {
     char str[BUFFER_SIZE];
     struct pcap_stat stats;
 
-    if (pcap_stats(handle, &stats) == -1) {
-        logging(fp, "Error getting packet capture statistics\n");
-        return;
+    if (handle == NULL || pcap_stats(handle, &stats) == -1) {
+        snprintf(str, 36, "No packets have been captured yet.\n");
+    } else {
+        snprintf(str, 512, "Packet capture statistics:\n"
+                                   "  Packets received: %u\n"
+                                   "  Packets dropped (by driver): %u\n"
+                                   "  Packets dropped (because there was no room in the operating system's buffer): %u\n"
+                                   "  Packets dropped (by filter): %u\n",
+                 stats.ps_recv, stats.ps_drop, stats.ps_ifdrop, stats.ps_drop);
     }
-
-    snprintf(str, 512, "Packet capture statistics:\n"
-                       "  Packets received: %u\n"
-                       "  Packets dropped (by driver): %u\n"
-                       "  Packets dropped (because there was no room in the operating system's buffer): %u\n"
-                       "  Packets dropped (by filter): %u\n",
-         stats.ps_recv, stats.ps_drop, stats.ps_ifdrop, stats.ps_drop);
-
-    send_data_to_socket(&client_socket, str, 512, fp);
+    logging(fp, "Hello\n");
+    send_data_to_socket(&client_socket, str, strlen(str), NULL);
 }
 
 static void
@@ -197,10 +197,7 @@ run(char* socket_path) {
         memset(buffer, 0, bytes_recv);
     }
 
-    if (is_sniffing) {
-        logging(fp, "Works!\n");
-        stop_sniffing();
-    }
+    stop_sniffing();
 
     end_processes(fp, root, &server_socket, &client_socket);
 }

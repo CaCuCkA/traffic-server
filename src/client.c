@@ -16,6 +16,9 @@ static char* string = "=========================================================
 
 static bool
 is_valid_ipv4_address(char* ip_str) {
+    if (ip_str == NULL) {
+        return false;
+    }
     struct sockaddr_in sa;
     int result = inet_pton(AF_INET, ip_str, &(sa.sin_addr));
     return result != 0;
