@@ -489,8 +489,7 @@ MigrationBackup/
 
 # Object files
 .obj/
-client
-daemon
+.bin/
 
 # .idea
 .idea/
